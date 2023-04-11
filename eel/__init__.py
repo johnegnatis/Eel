@@ -105,33 +105,8 @@ def init(path, allowed_extensions=['.js', '.html', '.txt', '.htm',
                                    '.xhtml', '.vue'], js_result_timeout=10000):
     global root_path, _js_functions, _js_result_timeout
     root_path = _get_real_path(path)
-
-    js_functions = set()
-    for root, _, files in os.walk(root_path):
-        for name in files:
-            if not any(name.endswith(ext) for ext in allowed_extensions):
-                continue
-
-            try:
-                with open(os.path.join(root, name), encoding='utf-8') as file:
-                    contents = file.read()
-                    expose_calls = set()
-                    matches = EXPOSED_JS_FUNCTIONS.parseString(contents).asList()
-                    for expose_call in matches:
-                        # Verify that function name is valid
-                        msg = "eel.expose() call contains '(' or '='"
-                        assert rgx.findall(r'[\(=]', expose_call) == [], msg
-                        expose_calls.add(expose_call)
-                    js_functions.update(expose_calls)
-            except UnicodeDecodeError:
-                pass    # Malformed file probably
-
-    _js_functions = list(js_functions)
-    for js_function in _js_functions:
-        _mock_js_function(js_function)
-
+    _js_functions = list(set())
     _js_result_timeout = js_result_timeout
-
 
 def start(*start_urls, **kwargs):
     _start_args.update(kwargs)
